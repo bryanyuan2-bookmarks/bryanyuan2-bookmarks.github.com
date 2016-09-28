@@ -1,0 +1,51 @@
+@fs-n: 20px;
+@fs-ms: 16px;
+@fs-s: 14px;
+@fs-c: #FFFFFF;
+@twitter-blue: #55ACEE;
+@ff-n: 'Open Sans', sans-serif;
+@ff-ref: Georgia, serif;
+@bg-gray-dark: #DCDCDC;
+@bg-gray-light: #F0F0F0;
+
+.text-corner (@radius: 6px) {
+  border-radius: @radius;
+  -webkit-border-radius: @radius;
+  -moz-border-radius: @radius;
+}
+
+.search-algo() {
+  display: inline-block;
+  font-size: 14px;
+  height: 120px;
+  padding: 6px;
+  margin: 12px 12px 0 12px;
+  vertical-align: top;
+  white-space: initial;
+  overflow: hidden;
+  border:#cccccc 1px solid;
+}
+
+.set-title {
+    padding-left: 12px;
+    border-left: 8px solid #55ACEE;
+}
+
+
+.bookmarks .search-item{
+    width: 320px;
+    cursor: pointer;
+    .text-corner(3px);
+    .search-algo();
+}
+
+.bookmarks .search-item:hover{
+    -webkit-border-radius: 0px;
+    -moz-border-radius: 0px;
+    border-radius: 0px;
+    border-color: #888888;
+}
+
+.bookmarks .search-item .title{
+    font-weight: 700;
+}
