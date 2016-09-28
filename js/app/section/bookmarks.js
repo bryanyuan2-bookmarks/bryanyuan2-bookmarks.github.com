@@ -5,7 +5,16 @@ var React = require('react'),
     PureRenderMixin = require('react-addons-pure-render-mixin'),
     TimeAgo = require('react-timeago').default;
 
-var config = require('./../config/env.json')[process.env.NODE_ENV || 'development'];
+var config = require('./../config/env.json')[process.env.NODE_ENV || 'development'],
+    bookmarksCfg = {
+      "searchHeader": {
+          "Accept" : "application/json; charset=utf-8",
+          "Content-Type": "application/javascript; charset=utf-8",
+          "Access-Control-Allow-Origin" : "*"
+        },
+      "searchTimeout": 2000
+    };
+
 
 var Bookmark = React.createClass({
   mixins: [PureRenderMixin],
@@ -48,7 +57,9 @@ var BookmarksSync = React.createClass({
 
     $.ajax({
       url: api,
-      type:'get'
+      dataType: "jsonp",
+      headers: bookmarksCfg.searchHeader,
+      timeout: bookmarksCfg.searchTimeout
     }).done(function( data ) {
       that.setState({
         load: true,
