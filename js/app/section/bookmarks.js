@@ -58,7 +58,6 @@ var BookmarksSync = React.createClass({
     $.ajax({
       type: 'GET',
       url: api,
-      dataType: "jsonp",
       contentType: "application/json",
       headers: bookmarksCfg.searchHeader,
       timeout: bookmarksCfg.searchTimeout
