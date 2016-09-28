@@ -53,7 +53,7 @@ var BookmarksSync = React.createClass({
   },
   componentWillMount: function() {
     var that = this,
-        api = "http://" + config.INSTAPAPER.DOMAIN + ":" + config.INSTAPAPER.PORT + "/" + config.INSTAPAPER.PATH;
+        api = config.INSTAPAPER.TYPE + "://" + config.INSTAPAPER.DOMAIN + ":" + config.INSTAPAPER.PORT + "/" + config.INSTAPAPER.PATH;
 
     $.ajax({
       url: api,
