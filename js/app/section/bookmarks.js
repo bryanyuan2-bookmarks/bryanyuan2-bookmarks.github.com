@@ -56,8 +56,10 @@ var BookmarksSync = React.createClass({
         api = config.INSTAPAPER.TYPE + "://" + config.INSTAPAPER.DOMAIN + ":" + config.INSTAPAPER.PORT + "/" + config.INSTAPAPER.PATH;
 
     $.ajax({
+      type: 'GET',
       url: api,
       dataType: "jsonp",
+      contentType: "application/json",
       headers: bookmarksCfg.searchHeader,
       timeout: bookmarksCfg.searchTimeout
     }).done(function( data ) {
