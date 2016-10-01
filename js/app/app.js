@@ -16,7 +16,7 @@ var App = React.createClass({
   render: function () {
     return (
       <div className="container">
-        <h1 className="set-title">bryanyuan2 bookmarks</h1>
+        <h2 className="set-title">bryanyuan2 bookmarks</h2>
         <CompBookmarks />
       </div>
     );

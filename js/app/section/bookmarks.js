@@ -1,6 +1,7 @@
 "use strict";
 
 var React = require('react'),
+    _ = require('lodash'),
     LoadJSON = require('./../utils/mixins').LoadJSON,
     PureRenderMixin = require('react-addons-pure-render-mixin'),
     TimeAgo = require('react-timeago').default;
@@ -12,9 +13,27 @@ var config = require('./../config/env.json')[process.env.NODE_ENV || 'developmen
           "Content-Type": "application/javascript; charset=utf-8",
           "Access-Control-Allow-Origin" : "*"
         },
-      "searchTimeout": 2000
+      "searchTimeout": 5000
     };
 
+var Tag = React.createClass({
+  mixins: [PureRenderMixin],
+  propTypes: {
+    text: React.PropTypes.string,
+    key: React.PropTypes.number
+  },
+  getDefaultProps: function() {
+    return {
+      text: '',
+      key: 0
+    };
+  },
+  render: function() {
+    return (
+        <span className="tag">{this.props.text}</span>
+    );
+  }
+});
 
 var Bookmark = React.createClass({
   mixins: [PureRenderMixin],
@@ -29,13 +48,57 @@ var Bookmark = React.createClass({
     };
   },
   render: function() {
-    console.log("item", this.props.item);
-    var date = new Date(this.props.item.time*1000);
+    //console.log("item", this.props.item);
+    var item = this.props.item,
+        tagsContent = [],
+        data = {
+          title: _.get(this.props, ['item', 'title'], ''),
+          url: _.get(this.props, ['item', 'url'], ''),
+          favicon: _.get(this.props, ['item', 'favicon'], ''),
+          text: _.get(this.props, ['item', 'text'], ''),
+          time: _.get(this.props, ['item', 'time'], ''),
+          _description: _.get(this.props, ['item', '_description'], ''),
+          _text: _.get(this.props, ['item', '_text'], ''),
+          _image: _.get(this.props, ['item', '_image'], ''),
+          _tags: _.get(this.props, ['item', '_tags'], []),
+        },
+        getCurrTime = new Date(data.time*1000);
+
+    if (data._tags.length > 0) {
+      data._tags.forEach(function(tag, index) {
+        if (index < 3) {
+          tagsContent.push(<Tag text={tag} key={index} />);
+        }
+      });
+    }
+
+    var leftCls = data._image ? 'left' : 'left-clean';
+
     return (
-      <div className="search-item">
-        <div className="title">{this.props.item.title && this.props.item.title}</div>
-        <div className="description">{this.props.item.description && this.props.item.description}</div>
-        <TimeAgo date={date} />
+      <div id={this.props.item.bookmark_id} className="search-item">
+        <div className={leftCls}>
+          <span className="titleCont">
+            <a target="_blank" href={data.url}>
+              <span className="favicon" >{ data.favicon && <img width="16" height="16" src={data.favicon} /> }</span>
+              <span className="title">{data.title && data.title}</span>
+            </a>
+          </span>
+          <div className="description">
+            {
+              (data._description && data._description) ||
+              (data._text && data._text)
+            }
+          </div>
+            {tagsContent}
+            <div className="date">added <TimeAgo date={getCurrTime} /></div>
+        </div>
+
+        { data._image &&
+          <div className="right">
+              <div className="img">
+                <img width="80" height="80" src={data._image} />
+              </div>
+          </div> }
       </div>
     );
   }
