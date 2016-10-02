@@ -10,7 +10,6 @@ var gulp = require('gulp'),
     less = require('gulp-less'),
     cssmin = require('gulp-minify-css'),
     rename = require('gulp-rename'),
-    nightwatch = require('gulp-nightwatch'),
     jshint = require('gulp-jshint'),
     react = require('gulp-react'),
     cache = require('gulp-cached'),
@@ -24,9 +23,7 @@ var gulp = require('gulp'),
 var paths = {
     css:['./asserts/css/*.less'],
     js: [ './js/app/*.js',
-          './js/app/components/*.js',
           './js/app/config/*.js',
-          './js/app/search/*.js',
           './js/app/section/*.js',
           './js/app/untls/*.js'
     ],
@@ -123,16 +120,5 @@ gulp.task('typecheck', function() {
     // Strip Flow type annotations before compiling
 });
 
-gulp.task('nightwatch', function() {
-  gulp.src('')
-    .pipe(nightwatch({
-      configFile: 'nightwatch.json'
-    }));
-});
-
-
 /* default */
 gulp.task('default', ['css', 'typecheck', 'jshint', 'js', 'connect', 'watch']);
-
-/* java -jar selenium-server-standalone-2.51.0.jar */
-gulp.task('test', ['nightwatch']);

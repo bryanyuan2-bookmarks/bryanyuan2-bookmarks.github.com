@@ -14,7 +14,77 @@ var config = require('./../config/env.json')[process.env.NODE_ENV || 'developmen
           "Access-Control-Allow-Origin" : "*"
         },
       "searchTimeout": 5000
+    },
+    INSTAPAPER_LIST_API = config.INSTAPAPER.TYPE + "://" +
+              config.INSTAPAPER.DOMAIN + ":" +
+              config.INSTAPAPER.PORT + "/" +
+              config.INSTAPAPER.PATH,
+    INSTAPAPER_QUERY_API = config.INSTAPAPER.TYPE + "://" +
+              config.INSTAPAPER.DOMAIN + ":" +
+              config.INSTAPAPER.PORT + "/" +
+              config.INSTAPAPER.SEARCH + "/",
+    trans = {
+      zrp: "No bookmarks found ! please try other query",
+      loading: "Loading bookmarks ...",
+      searchBoxPlaceHolder: "Search bookmarks here ..."
     };
+
+var SearchBox = React.createClass({
+  mixins: [PureRenderMixin],
+  propTypes: {
+  },
+  getDefaultProps: function() {
+    return {
+    };
+  },
+  getInitialState: function() {
+    return {
+      input: ''
+    };
+  },
+  updateShared: function(query){
+    this.props.updateShared(query);
+  },
+  componentWillUpdate: function(nextProps, nextState) {
+    console.log("componentWillUpdate nextState.input", nextState.input);
+    this.updateShared(nextState.input);
+  },
+  handleChange: function(e) {
+    var query = e.target.value ? e.target.value : '';
+    this.setState({
+      input: query
+    });
+  },
+  render: function() {
+    if (this.state.input !== '') {
+      console.log("render");
+    }
+
+     return (
+        <div>
+          <input className="search-box" type="text" name="search" onChange={this.handleChange} placeholder={trans.searchBoxPlaceHolder} />
+        </div>
+    );
+  }
+});
+
+
+var ZRP = React.createClass({
+  mixins: [PureRenderMixin],
+  propTypes: {
+  },
+  getDefaultProps: function() {
+    return {
+    };
+  },
+  render: function() {
+    return (
+        <span className="search-item zrp">
+          {trans.zrp}
+        </span>
+    );
+  }
+});
 
 var Tag = React.createClass({
   mixins: [PureRenderMixin],
@@ -49,8 +119,7 @@ var Bookmark = React.createClass({
   },
   render: function() {
     //console.log("item", this.props.item);
-    var item = this.props.item,
-        tagsContent = [],
+    var tagsContent = [],
         data = {
           title: _.get(this.props, ['item', 'title'], ''),
           url: _.get(this.props, ['item', 'url'], ''),
@@ -114,10 +183,41 @@ var BookmarksSync = React.createClass({
       data: {}
     };
   },
+  getDefaultProps: function() {
+      return {
+          sharedQuery: ''  
+      };
+  },
+  updateShared: function(){
+    //this.props.updateShared('card');
+  },
   componentWillMount: function() {
-    var that = this,
-        api = config.INSTAPAPER.TYPE + "://" + config.INSTAPAPER.DOMAIN + ":" + config.INSTAPAPER.PORT + "/" + config.INSTAPAPER.PATH;
+    console.log("this.props.sharedQuery", this.props.sharedQuery);
+    var that = this;
 
+    $.ajax({
+      type: 'GET',
+      url: INSTAPAPER_LIST_API,
+      contentType: "application/json",
+      headers: bookmarksCfg.searchHeader,
+      timeout: bookmarksCfg.searchTimeout
+    }).done(function( data ) {
+      that.setState({
+        load: true,
+        data: data
+      });
+    });
+  },
+  componentWillReceiveProps: function(nextProps) {
+    console.log("componentWillUpdate sharedQuery", nextProps.sharedQuery);
+    var that = this,
+        api;
+
+    if (nextProps.sharedQuery) {
+      api = INSTAPAPER_QUERY_API + nextProps.sharedQuery;
+    } else {
+      api = INSTAPAPER_LIST_API;
+    }
     $.ajax({
       type: 'GET',
       url: api,
@@ -131,36 +231,57 @@ var BookmarksSync = React.createClass({
       });
     });
   },
-  getDefaultProps: function() {
-    return {
-    };
-  },
   render: function() {
+    var targetData = this.state.data,
+        bookmark,
+        bookmarksCls;
+
     if (this.state.load === true) {
-      var targetData = this.state.data,
-          bookmark = [];
-      targetData.forEach(function(item, index) {
-        bookmark.push(<Bookmark item={item} key={index} />);
-      });
-      return (
-        <div className="bookmarks">
-          {bookmark}
+      bookmark = [];
+      bookmarksCls = "bookmarks";
+
+      if (targetData.result !== "0" && targetData.result !== "error") {
+        targetData.forEach(function(item, index) {
+          bookmark.push(<Bookmark item={item} key={index} />);
+        });
+      } else {
+        bookmark.push(<ZRP />);
+      }
+    } else {
+      bookmark = trans.loading;
+      bookmarksCls = "bookmarks loading";
+    }
+
+    return (
+        <div>
+          <div className="bookmarks-hint">This is my bookmarks index which is powered by Instapaper API, MondgoDB, Expressjs and ReactJS. Please feel free and grab some articles if you like it.</div>
+          <div className={bookmarksCls}>
+            {bookmark}
+          </div>
         </div>
       );
-    } else {
-      return (
-        <div className="bookmarks">loading</div>
-      );
-    }
+
   }
 });
 
 var BookmarksContainer = React.createClass({
   mixins: [LoadJSON],
+  updateShared: function(sharedQuery){
+    this.setState({
+      sharedQuery: sharedQuery
+    });
+  },
   render: function() {
     return(
       <div>
-        <BookmarksSync />
+        <SearchBox updateShared={this.updateShared} />
+        <BookmarksSync sharedQuery={this.state.sharedQuery} />
+        <div id="back-to-nav">
+          <a target="_blank" href="http://bryanyuan2.github.io">
+            <img className="github-img" src="asserts/images/tech/github.png" alt="back to bryanyuan2 github page" />
+            <div className="github-text">back to bryanyuan2 github page</div>
+          </a>
+        </div>
       </div>
     );
   }
