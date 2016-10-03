@@ -26,7 +26,8 @@ var config = require('./../config/env.json')[process.env.NODE_ENV || 'developmen
     trans = {
       zrp: "No bookmarks found ! please try other query",
       loading: "Loading bookmarks ...",
-      searchBoxPlaceHolder: "Search bookmarks here ..."
+      searchBoxPlaceHolder: "Search bookmarks here ...",
+      backToGithub: "Back to bryanyuan2 Github Page"
     };
 
 var SearchBox = React.createClass({
@@ -46,7 +47,7 @@ var SearchBox = React.createClass({
     this.props.updateShared(query);
   },
   componentWillUpdate: function(nextProps, nextState) {
-    console.log("componentWillUpdate nextState.input", nextState.input);
+    // console.log("componentWillUpdate nextState.input", nextState.input);
     this.updateShared(nextState.input);
   },
   handleChange: function(e) {
@@ -56,10 +57,6 @@ var SearchBox = React.createClass({
     });
   },
   render: function() {
-    if (this.state.input !== '') {
-      console.log("render");
-    }
-
      return (
         <div>
           <input className="search-box" type="text" name="search" onChange={this.handleChange} placeholder={trans.searchBoxPlaceHolder} />
@@ -118,7 +115,7 @@ var Bookmark = React.createClass({
     };
   },
   render: function() {
-    //console.log("item", this.props.item);
+    // console.log("item", this.props.item);
     var tagsContent = [],
         data = {
           title: _.get(this.props, ['item', 'title'], ''),
@@ -131,7 +128,8 @@ var Bookmark = React.createClass({
           _image: _.get(this.props, ['item', '_image'], ''),
           _tags: _.get(this.props, ['item', '_tags'], []),
         },
-        getCurrTime = new Date(data.time*1000);
+        getCurrTime = new Date(data.time*1000),
+        leftCls = data._image ? 'left' : 'left-clean';
 
     if (data._tags.length > 0) {
       data._tags.forEach(function(tag, index) {
@@ -140,8 +138,6 @@ var Bookmark = React.createClass({
         }
       });
     }
-
-    var leftCls = data._image ? 'left' : 'left-clean';
 
     return (
       <div id={this.props.item.bookmark_id} className="search-item">
@@ -189,10 +185,10 @@ var BookmarksSync = React.createClass({
       };
   },
   updateShared: function(){
-    //this.props.updateShared('card');
+    // this.props.updateShared();
   },
   componentWillMount: function() {
-    console.log("this.props.sharedQuery", this.props.sharedQuery);
+    // console.log("this.props.sharedQuery", this.props.sharedQuery);
     var that = this;
 
     $.ajax({
@@ -209,7 +205,7 @@ var BookmarksSync = React.createClass({
     });
   },
   componentWillReceiveProps: function(nextProps) {
-    console.log("componentWillUpdate sharedQuery", nextProps.sharedQuery);
+    // console.log("componentWillUpdate sharedQuery", nextProps.sharedQuery);
     var that = this,
         api;
 
@@ -218,6 +214,7 @@ var BookmarksSync = React.createClass({
     } else {
       api = INSTAPAPER_LIST_API;
     }
+
     $.ajax({
       type: 'GET',
       url: api,
@@ -278,8 +275,8 @@ var BookmarksContainer = React.createClass({
         <BookmarksSync sharedQuery={this.state.sharedQuery} />
         <div id="back-to-nav">
           <a target="_blank" href="http://bryanyuan2.github.io">
-            <img className="github-img" src="asserts/images/tech/github.png" alt="back to bryanyuan2 github page" />
-            <div className="github-text">back to bryanyuan2 github page</div>
+            <img className="github-img" src="asserts/images/tech/github.png" alt={trans.backToGithub} />
+            <div className="github-text"></div>
           </a>
         </div>
       </div>
