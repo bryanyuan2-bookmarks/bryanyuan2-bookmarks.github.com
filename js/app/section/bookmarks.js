@@ -276,7 +276,7 @@ var BookmarksContainer = React.createClass({
         <div id="back-to-nav">
           <a target="_blank" href="http://bryanyuan2.github.io">
             <img className="github-img" src="asserts/images/tech/github.png" alt={trans.backToGithub} />
-            <div className="github-text"></div>
+            <div className="github-text">{trans.backToGithub}</div>
           </a>
         </div>
       </div>
