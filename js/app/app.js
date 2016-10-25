@@ -16,7 +16,7 @@ var App = React.createClass({
   render: function () {
     return (
       <div className="container">
-        <h2 className="set-title">bryanyuan2 bookmarks</h2>
+        <h2 className="set-title">bryanyuan2 bookmarks | 我的書籤</h2>
         <CompBookmarks />
       </div>
     );
