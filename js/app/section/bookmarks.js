@@ -4,7 +4,8 @@ var React = require('react'),
     _ = require('lodash'),
     LoadJSON = require('./../utils/mixins').LoadJSON,
     PureRenderMixin = require('react-addons-pure-render-mixin'),
-    TimeAgo = require('react-timeago').default;
+    TimeAgo = require('react-timeago').default,
+    Debounce = require('react-throttle').Debounce;
 
 var config = require('./../config/env.json')[process.env.NODE_ENV || 'development'],
     bookmarksCfg = {
@@ -57,9 +58,12 @@ var SearchBox = React.createClass({
     });
   },
   render: function() {
+
      return (
         <div>
-          <input className="search-box" type="text" name="search" onChange={this.handleChange} placeholder={trans.searchBoxPlaceHolder} />
+          <Debounce time="400" handler="onChange">
+            <input className="search-box" type="text" name="search" onChange={this.handleChange} placeholder={trans.searchBoxPlaceHolder} />
+          </Debounce>        
         </div>
     );
   }
