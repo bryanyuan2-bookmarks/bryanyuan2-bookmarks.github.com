@@ -24,6 +24,14 @@ var config = require('./../config/env.json')[process.env.NODE_ENV || 'developmen
               config.INSTAPAPER.DOMAIN + ":" +
               config.INSTAPAPER.PORT + "/" +
               config.INSTAPAPER.SEARCH + "/",
+    INSTAPAPER_COUNT_API = config.INSTAPAPER.TYPE + "://" +
+              config.INSTAPAPER.DOMAIN + ":" +
+              config.INSTAPAPER.PORT + "/" +
+              config.INSTAPAPER.COUNT + "/",
+    INSTAPAPER_LATEST_API = config.INSTAPAPER.TYPE + "://" +
+              config.INSTAPAPER.DOMAIN + ":" +
+              config.INSTAPAPER.PORT + "/" +
+              config.INSTAPAPER.LATEST + "/",
     trans = {
       zrp: "No bookmarks found ! please try other query",
       loading: "Loading bookmarks ...",
@@ -173,6 +181,79 @@ var Bookmark = React.createClass({
   }
 });
 
+
+var BookmarkStatusCount = React.createClass({
+  mixins: [PureRenderMixin],
+  getInitialState: function() {
+    return {
+      count: 0
+    };
+  },
+  componentWillMount: function() {
+    var that = this;
+    $.ajax({
+      type: 'GET',
+      url: INSTAPAPER_COUNT_API,
+      contentType: "application/json",
+      headers: bookmarksCfg.searchHeader,
+      timeout: bookmarksCfg.searchTimeout
+    }).done(function( data ) {
+      var output = $.parseJSON(data);
+      that.setState({
+        count: output[0].count
+      });
+    });
+  },
+  render: function() {
+    var count = this.state.count;
+    return (
+        <div className="bookmarksInfo">
+          <div>
+            <span className="hint-count">Total bookmarks: </span>
+            <span className="count">{count}</span>
+          </div>
+        </div>
+    );
+  }
+});
+
+
+var BookmarkStatusUpdate = React.createClass({
+  mixins: [PureRenderMixin],
+  getInitialState: function() {
+    return {
+      time: 0
+    };
+  },
+  componentWillMount: function() {
+    var that = this;
+    $.ajax({
+      type: 'GET',
+      url: INSTAPAPER_LATEST_API,
+      contentType: "application/json",
+      headers: bookmarksCfg.searchHeader,
+      timeout: bookmarksCfg.searchTimeout
+    }).done(function( data ) {
+      that.setState({
+        time: data[0].time
+      });
+    });
+  },
+  render: function() {
+    var time = this.state.time,
+        getCurrTime = new Date(time*1000);
+
+    return (
+        <div className="bookmarksInfo">
+          <div>
+            <span className="hint-count">Latest update: </span>
+            <span className="count"><TimeAgo date={getCurrTime} /></span>
+          </div>
+        </div>
+    );
+  }
+});
+
 var BookmarksSync = React.createClass({
   mixins: [PureRenderMixin],
   propTypes: {
@@ -275,7 +356,13 @@ var BookmarksContainer = React.createClass({
   render: function() {
     return(
       <div>
-        <SearchBox updateShared={this.updateShared} />
+        <div className="bookmarkHeaderCont">
+          <SearchBox updateShared={this.updateShared} />
+          <div className="bookmarksAlert alert alert-success" role="alert">
+            <BookmarkStatusCount />
+            <BookmarkStatusUpdate />
+          </div>
+        </div>
         <BookmarksSync sharedQuery={this.state.sharedQuery} />
         <div id="back-to-nav">
           <a target="_blank" href="http://bryanyuan2.github.io">
