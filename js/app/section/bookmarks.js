@@ -5,13 +5,12 @@ var React = require('react'),
     LoadJSON = require('./../utils/mixins').LoadJSON,
     PureRenderMixin = require('react-addons-pure-render-mixin'),
     TimeAgo = require('react-timeago').default,
-    Debounce = require('react-throttle').Debounce;
+    Debounce = require('react-throttle').Debounce,
+    LineChart = require("react-chartjs").Line;
 
 var FaPaperList = require('react-icons/lib/fa/list'),
     FaPaperTh = require('react-icons/lib/fa/th'),
     FaChRight = require('react-icons/lib/fa/chevron-right');
-
-var LineChart = require("react-chartjs").Line;
 
 var config = require('./../config/env.json')[process.env.NODE_ENV || 'development'],
     bookmarksCfg = {
@@ -38,6 +37,10 @@ var config = require('./../config/env.json')[process.env.NODE_ENV || 'developmen
               config.INSTAPAPER.DOMAIN + ":" +
               config.INSTAPAPER.PORT + "/" +
               config.INSTAPAPER.LATEST + "/",
+    INSTAPAPER_TIMESTAMP_API = config.INSTAPAPER.TYPE + "://" +
+              config.INSTAPAPER.DOMAIN + ":" +
+              config.INSTAPAPER.PORT + "/" +
+              config.INSTAPAPER.TIMESTAMP + "/",
     trans = {
       zrp: "No bookmarks found ! please try other query",
       loading: "Loading bookmarks ...",
@@ -423,6 +426,8 @@ var BookmarkChart = React.createClass({
   },
   getInitialState: function() {
     return {
+      load: true,
+      data: {}
     };
   },
   getDefaultProps: function() {
@@ -430,8 +435,22 @@ var BookmarkChart = React.createClass({
       };
   },
   componentWillMount: function() {
+    var that = this;
+    $.ajax({
+      type: 'GET',
+      url: INSTAPAPER_TIMESTAMP_API,
+      contentType: "application/json",
+      headers: bookmarksCfg.searchHeader,
+      timeout: bookmarksCfg.searchTimeout
+    }).done(function( data ) {
+      that.setState({
+        load: true,
+        data: data
+      });
+    });
   },
   render: function() {
+
     var chartData = {
       labels: [
         "January",
@@ -546,14 +565,12 @@ var MoreLink = React.createClass({
     console.log("MoreLink updateLimit");
     this.props.updateLimit(limit);
   },
-  _handleNextPage: function(e) {
+  _handleNextPage: function() {
       this.moreLinkLimit = this.moreLinkLimit + 10;
       this.setState({
           limit: this.moreLinkLimit
       });
-      this.updateLimit(this.moreLinkLimit)
-  },
-  componentWillUpdate: function(nextProps, nextState) {
+      this.updateLimit(this.moreLinkLimit);
   },
   render: function() {
     return (
@@ -608,12 +625,12 @@ var BookmarksContainer = React.createClass({
             <div className="github-text">{trans.backToGithub}</div>
           </a>
         </div>
+        <hr />
         <MoreLink updateLimit={this.updateLimit} />
       </div>
     );
   }
 });
 
-
-// BookmarkChart
+// <BookmarkChart />
 module.exports = BookmarksContainer;
