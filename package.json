@@ -73,11 +73,9 @@
   "dependencies": {
     "chart.js": "^1.1.1",
     "envify": "^3.4.1",
-    "group-by-time": "^1.0.0",
     "gulp-if": "^2.0.1",
     "lodash": "^4.16.2",
     "minimist": "^1.2.0",
-    "moment": "^2.15.2",
     "nightwatch": "^0.5.36",
     "parse-domain": "^0.2.1",
     "react": "^15.3.2",
