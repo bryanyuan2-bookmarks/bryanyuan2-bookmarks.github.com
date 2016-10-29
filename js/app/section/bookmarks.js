@@ -8,7 +8,10 @@ var React = require('react'),
     Debounce = require('react-throttle').Debounce;
 
 var FaPaperList = require('react-icons/lib/fa/list'),
-    FaPaperTh = require('react-icons/lib/fa/th');
+    FaPaperTh = require('react-icons/lib/fa/th'),
+    FaChRight = require('react-icons/lib/fa/chevron-right');
+
+var LineChart = require("react-chartjs").Line;
 
 var config = require('./../config/env.json')[process.env.NODE_ENV || 'development'],
     bookmarksCfg = {
@@ -325,7 +328,8 @@ var BookmarksSync = React.createClass({
   getDefaultProps: function() {
       return {
           sharedQuery: '',
-          shareType: 'default' 
+          shareType: 'default',
+          shareLimit: 10
       };
   },
   updateShared: function(){
@@ -334,7 +338,6 @@ var BookmarksSync = React.createClass({
   componentWillMount: function() {
     // console.log("this.props.sharedQuery", this.props.sharedQuery);
     var that = this;
-
     $.ajax({
       type: 'GET',
       url: INSTAPAPER_LIST_API,
@@ -356,9 +359,9 @@ var BookmarksSync = React.createClass({
             api;
 
         if (nextProps.sharedQuery) {
-          api = INSTAPAPER_QUERY_API + nextProps.sharedQuery;
+          api = INSTAPAPER_QUERY_API + nextProps.sharedQuery + '/' + nextProps.shareLimit;
         } else {
-          api = INSTAPAPER_LIST_API;
+          api = INSTAPAPER_LIST_API + '/' + nextProps.shareLimit;
         }
 
         $.ajax({
@@ -415,6 +418,76 @@ var BookmarksSync = React.createClass({
 });
 
 
+var BookmarkChart = React.createClass({
+  propTypes: {
+  },
+  getInitialState: function() {
+    return {
+    };
+  },
+  getDefaultProps: function() {
+      return {
+      };
+  },
+  componentWillMount: function() {
+  },
+  render: function() {
+    var chartData = {
+      labels: [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July"
+      ],
+      datasets: [
+        {
+          label: "My First dataset",
+            fill: false,
+            lineTension: 0.1,
+            backgroundColor: "rgba(75,192,192,0.4)",
+            borderColor: "rgba(75,192,192,1)",
+            borderCapStyle: 'butt',
+            borderDash: [],
+            borderDashOffset: 0.0,
+            borderJoinStyle: 'miter',
+            pointBorderColor: "rgba(75,192,192,1)",
+            pointBackgroundColor: "#fff",
+            pointBorderWidth: 1,
+            pointHoverRadius: 5,
+            pointHoverBackgroundColor: "rgba(75,192,192,1)",
+            pointHoverBorderColor: "rgba(220,220,220,1)",
+            pointHoverBorderWidth: 2,
+            pointRadius: 1,
+            pointHitRadius: 10,
+            data: [65, 59, 80, 81, 56, 55, 40],
+            spanGaps: false,
+        }
+      ]
+    };
+
+    var chartOptions = {
+        datasetFill: false,
+        responsive: true,
+        scales: {
+            xAxes: [{
+                type: 'linear',
+                position: 'bottom'
+            }]
+        }
+    };
+
+    return (
+        <div>
+          <LineChart data={chartData} options={chartOptions} width="800" height="180"/>
+        </div>
+      );
+  }
+});
+
+
 var DisplaySelect = React.createClass({
   mixins: [PureRenderMixin],
   propTypes: {
@@ -455,13 +528,50 @@ var DisplaySelect = React.createClass({
   }
 });
 
+var MoreLink = React.createClass({
+  moreLinkLimit: 10,
+  mixins: [PureRenderMixin],
+  propTypes: {
+  },
+  getInitialState: function() {
+    return {
+        limit: 10
+    };
+  },
+  getDefaultProps: function() {
+      return {
+      };
+  },
+  updateLimit: function(limit){
+    console.log("MoreLink updateLimit");
+    this.props.updateLimit(limit);
+  },
+  _handleNextPage: function(e) {
+      this.moreLinkLimit = this.moreLinkLimit + 10;
+      this.setState({
+          limit: this.moreLinkLimit
+      });
+      this.updateLimit(this.moreLinkLimit)
+  },
+  componentWillUpdate: function(nextProps, nextState) {
+  },
+  render: function() {
+    return (
+        <div className="more-link-group">
+          <button id="more-link-btn" className="btn btn-default display-group-btn" type="submit" onClick={this._handleNextPage.bind(this)} ><FaChRight size="18" /> more bookmarks ...</button>
+        </div>
+      );
+  }
+});
+
 
 var BookmarksContainer = React.createClass({
   mixins: [LoadJSON],
   getInitialState: function() {
     return {
       sharedQuery: '',
-      shareType: 'default'
+      shareType: 'default',
+      shareLimit: 10
     };
   },
   updateShared: function(sharedQuery){
@@ -469,6 +579,12 @@ var BookmarksContainer = React.createClass({
       sharedQuery: sharedQuery
     });
   },
+  updateLimit: function(shareLimit){
+    console.log("updateLimit", shareLimit);
+    this.setState({
+      shareLimit: shareLimit
+    });
+  },  
   updateSelect: function(shareType){
     this.setState({
       shareType: shareType
@@ -485,17 +601,19 @@ var BookmarksContainer = React.createClass({
             <BookmarkStatusUpdate />
           </div>
         </div>
-        <BookmarksSync shareType={this.state.shareType} sharedQuery={this.state.sharedQuery} />
+        <BookmarksSync shareLimit={this.state.shareLimit} shareType={this.state.shareType} sharedQuery={this.state.sharedQuery} />
         <div id="back-to-nav">
           <a target="_blank" href="http://bryanyuan2.github.io">
             <img className="github-img" src="asserts/images/tech/github.png" alt={trans.backToGithub} />
             <div className="github-text">{trans.backToGithub}</div>
           </a>
         </div>
+        <MoreLink updateLimit={this.updateLimit} />
       </div>
     );
   }
 });
 
 
+// BookmarkChart
 module.exports = BookmarksContainer;
