@@ -1,3 +1,5 @@
+// <BookmarkChart /> to be added
+
 "use strict";
 
 var React = require('react'),
@@ -10,7 +12,8 @@ var React = require('react'),
 
 var FaPaperList = require('react-icons/lib/fa/list'),
     FaPaperTh = require('react-icons/lib/fa/th'),
-    FaChRight = require('react-icons/lib/fa/chevron-right');
+    FaChRight = require('react-icons/lib/fa/chevron-right'),
+    FaQuestion = require('react-icons/lib/fa/question');
 
 var config = require('./../config/env.json')[process.env.NODE_ENV || 'development'],
     bookmarksCfg = {
@@ -41,20 +44,22 @@ var config = require('./../config/env.json')[process.env.NODE_ENV || 'developmen
               config.INSTAPAPER.DOMAIN + ":" +
               config.INSTAPAPER.PORT + "/" +
               config.INSTAPAPER.TIMESTAMP + "/",
-    trans = {
-      zrp: "No bookmarks found ! please try other query",
+    transObj = {
+      added: 'added',
+      backToGithub: "Back to bryanyuan2 Github Page",
       loading: "Loading bookmarks ...",
+      moreBookmarksEtc: "more bookmarks ...",
       searchBoxPlaceHolder: "Search bookmarks here ...",
-      backToGithub: "Back to bryanyuan2 Github Page"
+      techHint: "This is my bookmarks index which is powered by Instapaper API, MondgoDB, Expressjs and ReactJS. Please feel free and grab some articles if you like it.",
+      totalBookmarks: "Total bookmarks",
+      zrp: "No bookmarks found ! please try other query"
     };
+
 
 var SearchBox = React.createClass({
   mixins: [PureRenderMixin],
   propTypes: {
-  },
-  getDefaultProps: function() {
-    return {
-    };
+    updateShared: React.PropTypes.func
   },
   getInitialState: function() {
     return {
@@ -75,11 +80,10 @@ var SearchBox = React.createClass({
     });
   },
   render: function() {
-
      return (
         <div className="search-group">
           <Debounce time="400" handler="onChange">
-            <input className="search-box" type="text" name="search" onChange={this.handleChange.bind(this)} placeholder={trans.searchBoxPlaceHolder} />
+            <input className="search-box" type="text" name="search" onChange={this.handleChange.bind(this)} placeholder={transObj.searchBoxPlaceHolder} />
           </Debounce>
         </div>
     );
@@ -89,16 +93,10 @@ var SearchBox = React.createClass({
 
 var ZRP = React.createClass({
   mixins: [PureRenderMixin],
-  propTypes: {
-  },
-  getDefaultProps: function() {
-    return {
-    };
-  },
   render: function() {
     return (
         <span className="search-item zrp">
-          {trans.zrp}
+          {transObj.zrp}
         </span>
     );
   }
@@ -176,7 +174,7 @@ var Bookmark = React.createClass({
             }
           </div>
             {tagsContent}
-            <div className="date">added <TimeAgo date={getCurrTime} /></div>
+            <div className="date">{transObj.added} <TimeAgo date={getCurrTime} /></div>
         </div>
 
         { data._image &&
@@ -270,7 +268,7 @@ var BookmarkStatusCount = React.createClass({
     return (
         <div className="bookmarksInfo">
           <div>
-            <span className="hint-count">Total bookmarks: </span>
+            <span className="hint-count">{transObj.totalBookmarks}: </span>
             <span className="count">{count}</span>
           </div>
         </div>
@@ -320,6 +318,9 @@ var BookmarkStatusUpdate = React.createClass({
 var BookmarksSync = React.createClass({
   mixins: [PureRenderMixin],
   propTypes: {
+    shareLimit: React.PropTypes.func,
+    shareType: React.PropTypes.func,
+    sharedQuery: React.PropTypes.func
   },
   getInitialState: function() {
     return {
@@ -405,13 +406,16 @@ var BookmarksSync = React.createClass({
       }
     
     } else {
-      bookmark = trans.loading;
+      bookmark = transObj.loading;
       bookmarksCls = "bookmarks loading";
     }
 
     return (
         <div>
-          <div className="bookmarks-hint">This is my bookmarks index which is powered by Instapaper API, MondgoDB, Expressjs and ReactJS. Please feel free and grab some articles if you like it.</div>
+          <div className="bookmarks-hint">{transObj.techHint}</div>
+
+          <a target="_blank" href="https://medium.com/@bryanyuan2/how-to-build-my-bookmark-service-a77a97ae31a1#.wkhyixki0" className="btn btn-default navbar-btn"><FaQuestion size="18" />How I build this service ?</a>
+
           <div className={bookmarksCls}>
             {bookmark}
           </div>
@@ -420,7 +424,132 @@ var BookmarksSync = React.createClass({
   }
 });
 
+var DisplaySelect = React.createClass({
+  mixins: [PureRenderMixin],
+  propTypes: {
+    updateSelect: React.PropTypes.func
+  },
+  getInitialState: function() {
+    return {
+      type: 'default'
+    };
+  },
+  getDefaultProps: function() {
+      return {
+      };
+  },
+  updateSelect: function(type){
+    this.props.updateSelect(type);
+  },
+  componentWillUpdate: function(nextProps, nextState) {
+    this.updateSelect(nextState.type);
+  },
+  _handleClick: function(e) {
+    if (e.currentTarget.id === 'display-default') {
+      this.setState({
+          type: 'default'
+      });
+    } else if (e.currentTarget.id === 'display-simple') {
+      this.setState({
+          type: 'simple'
+      });
+    }
+  },
+  render: function() {
+    return (
+        <div className="display-group">
+          <button id="display-default" className="btn btn-default  display-group-btn" type="submit" onClick={this._handleClick.bind(this)}><FaPaperTh size="18" /> list</button>
+          <button id="display-simple" className="btn btn-default display-group-btn" type="submit" onClick={this._handleClick.bind(this)}><FaPaperList size="18" /> simple</button>
+        </div>
+      );
+  }
+});
 
+var MoreLink = React.createClass({
+  moreLinkLimit: 10,
+  mixins: [PureRenderMixin],
+  propTypes: {
+  },
+  getInitialState: function() {
+    return {
+        limit: 10
+    };
+  },
+  getDefaultProps: function() {
+      return {
+      };
+  },
+  updateLimit: function(limit){
+    // console.log("MoreLink updateLimit");
+    this.props.updateLimit(limit);
+  },
+  _handleNextPage: function() {
+      this.moreLinkLimit = this.moreLinkLimit + 10;
+      this.setState({
+          limit: this.moreLinkLimit
+      });
+      this.updateLimit(this.moreLinkLimit);
+  },
+  render: function() {
+    return (
+        <div className="more-link-group">
+          <button id="more-link-btn" className="btn btn-default display-group-btn" type="submit" onClick={this._handleNextPage.bind(this)} ><FaChRight size="18" /> {transObj.moreBookmarksEtc}</button>
+        </div>
+      );
+  }
+});
+
+var BookmarksContainer = React.createClass({
+  mixins: [LoadJSON],
+  getInitialState: function() {
+    return {
+      sharedQuery: '',
+      shareType: 'default',
+      shareLimit: 10
+    };
+  },
+  updateShared: function(sharedQuery){
+    this.setState({
+      sharedQuery: sharedQuery
+    });
+  },
+  updateLimit: function(shareLimit){
+    // console.log("updateLimit", shareLimit);
+    this.setState({
+      shareLimit: shareLimit
+    });
+  },  
+  updateSelect: function(shareType){
+    this.setState({
+      shareType: shareType
+    });
+  },
+  render: function() {
+    return(
+      <div>
+        <div className="bookmark-header-cont">
+          <SearchBox updateShared={this.updateShared} />
+          <DisplaySelect updateSelect={this.updateSelect} />  
+          <div className="bookmarks-alert alert alert-success" role="alert">
+            <BookmarkStatusCount />
+            <BookmarkStatusUpdate />
+          </div>
+        </div>
+        <BookmarksSync shareLimit={this.state.shareLimit} shareType={this.state.shareType} sharedQuery={this.state.sharedQuery} />
+        <div id="back-to-nav">
+          <a target="_blank" href="http://bryanyuan2.github.io">
+            <img className="github-img" src="asserts/images/tech/github.png" alt={transObj.backToGithub} />
+            <div className="github-text">{transObj.backToGithub}</div>
+          </a>
+        </div>
+        <hr />
+        <MoreLink updateLimit={this.updateLimit} />
+      </div>
+    );
+  }
+});
+
+/*
 var BookmarkChart = React.createClass({
   propTypes: {
   },
@@ -505,132 +634,6 @@ var BookmarkChart = React.createClass({
       );
   }
 });
+*/
 
-
-var DisplaySelect = React.createClass({
-  mixins: [PureRenderMixin],
-  propTypes: {
-  },
-  getInitialState: function() {
-    return {
-      type: 'default'
-    };
-  },
-  getDefaultProps: function() {
-      return {
-      };
-  },
-  updateSelect: function(type){
-    this.props.updateSelect(type);
-  },
-  componentWillUpdate: function(nextProps, nextState) {
-    this.updateSelect(nextState.type);
-  },
-  _handleClick: function(e) {
-    if (e.currentTarget.id === 'display-default') {
-      this.setState({
-          type: 'default'
-      });
-    } else if (e.currentTarget.id === 'display-simple') {
-      this.setState({
-          type: 'simple'
-      });
-    }
-  },
-  render: function() {
-    return (
-        <div className="display-group">
-          <button id="display-default" className="btn btn-default  display-group-btn" type="submit" onClick={this._handleClick.bind(this)}><FaPaperTh size="18" /> list</button>
-          <button id="display-simple" className="btn btn-default display-group-btn" type="submit" onClick={this._handleClick.bind(this)}><FaPaperList size="18" /> simple</button>
-        </div>
-      );
-  }
-});
-
-var MoreLink = React.createClass({
-  moreLinkLimit: 10,
-  mixins: [PureRenderMixin],
-  propTypes: {
-  },
-  getInitialState: function() {
-    return {
-        limit: 10
-    };
-  },
-  getDefaultProps: function() {
-      return {
-      };
-  },
-  updateLimit: function(limit){
-    console.log("MoreLink updateLimit");
-    this.props.updateLimit(limit);
-  },
-  _handleNextPage: function() {
-      this.moreLinkLimit = this.moreLinkLimit + 10;
-      this.setState({
-          limit: this.moreLinkLimit
-      });
-      this.updateLimit(this.moreLinkLimit);
-  },
-  render: function() {
-    return (
-        <div className="more-link-group">
-          <button id="more-link-btn" className="btn btn-default display-group-btn" type="submit" onClick={this._handleNextPage.bind(this)} ><FaChRight size="18" /> more bookmarks ...</button>
-        </div>
-      );
-  }
-});
-
-
-var BookmarksContainer = React.createClass({
-  mixins: [LoadJSON],
-  getInitialState: function() {
-    return {
-      sharedQuery: '',
-      shareType: 'default',
-      shareLimit: 10
-    };
-  },
-  updateShared: function(sharedQuery){
-    this.setState({
-      sharedQuery: sharedQuery
-    });
-  },
-  updateLimit: function(shareLimit){
-    console.log("updateLimit", shareLimit);
-    this.setState({
-      shareLimit: shareLimit
-    });
-  },  
-  updateSelect: function(shareType){
-    this.setState({
-      shareType: shareType
-    });
-  },
-  render: function() {
-    return(
-      <div>
-        <div className="bookmarkHeaderCont">
-          <SearchBox updateShared={this.updateShared} />
-          <DisplaySelect updateSelect={this.updateSelect} />  
-          <div className="bookmarksAlert alert alert-success" role="alert">
-            <BookmarkStatusCount />
-            <BookmarkStatusUpdate />
-          </div>
-        </div>
-        <BookmarksSync shareLimit={this.state.shareLimit} shareType={this.state.shareType} sharedQuery={this.state.sharedQuery} />
-        <div id="back-to-nav">
-          <a target="_blank" href="http://bryanyuan2.github.io">
-            <img className="github-img" src="asserts/images/tech/github.png" alt={trans.backToGithub} />
-            <div className="github-text">{trans.backToGithub}</div>
-          </a>
-        </div>
-        <hr />
-        <MoreLink updateLimit={this.updateLimit} />
-      </div>
-    );
-  }
-});
-
-// <BookmarkChart />
 module.exports = BookmarksContainer;
