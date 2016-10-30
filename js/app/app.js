@@ -16,7 +16,7 @@ var App = React.createClass({
   render: function () {
     return (
       <div className="container">
-        <h2 className="set-title">bryanyuan2 bookmarks | 我的書籤</h2>
+        <h1 className="set-title">bryanyuan2 bookmarks | 技術書籤</h1>
         <CompBookmarks />
       </div>
     );
@@ -28,9 +28,5 @@ var routes = (
     <IndexRoute component={App} />
   </Route>
 );
-
-/* customize js */
-$(document).ready(function() {
-});
 
 ReactDOM.render(<Router history={browserHistory}>{routes}</Router>, document.getElementById('container'));
