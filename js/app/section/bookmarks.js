@@ -16,13 +16,18 @@ var FaPaperList = require('react-icons/lib/fa/list'),
     FaQuestion = require('react-icons/lib/fa/question');
 
 var config = require('./../config/env.json')[process.env.NODE_ENV || 'development'],
-    bookmarksCfg = {
-      "searchHeader": {
+    configObj = {
+      searchHeader: {
           "Accept" : "application/json; charset=utf-8",
           "Content-Type": "application/javascript; charset=utf-8",
           "Access-Control-Allow-Origin" : "*"
         },
-      "searchTimeout": 5000
+      searchTimeout: 5000,
+      debounceTime: "400",
+      shareLimit: 10,
+      increaseLimit: 10,
+      fontAwesomeSize: "18",
+      articleBuildService: "https://medium.com/@bryanyuan2/how-to-build-my-bookmark-service-a77a97ae31a1#.wkhyixki0"
     },
     INSTAPAPER_LIST_API = config.INSTAPAPER.TYPE + "://" +
               config.INSTAPAPER.DOMAIN + ":" +
@@ -46,10 +51,13 @@ var config = require('./../config/env.json')[process.env.NODE_ENV || 'developmen
               config.INSTAPAPER.TIMESTAMP + "/",
     transObj = {
       added: 'added',
+      articleBuildService: 'How I build this service ?',
       backToGithub: "Back to bryanyuan2 Github Page",
+      list: "list",
       loading: "Loading bookmarks ...",
       moreBookmarksEtc: "more bookmarks ...",
       searchBoxPlaceHolder: "Search bookmarks here ...",
+      simple: "simple",
       techHint: "This is my bookmarks index which is powered by Instapaper API, MondgoDB, Expressjs and ReactJS. Please feel free and grab some articles if you like it.",
       totalBookmarks: "Total bookmarks",
       zrp: "No bookmarks found ! please try other query"
@@ -82,7 +90,7 @@ var SearchBox = React.createClass({
   render: function() {
      return (
         <div className="search-group">
-          <Debounce time="400" handler="onChange">
+          <Debounce time={configObj.debounceTime} handler="onChange">
             <input className="search-box" type="text" name="search" onChange={this.handleChange.bind(this)} placeholder={transObj.searchBoxPlaceHolder} />
           </Debounce>
         </div>
@@ -254,8 +262,8 @@ var BookmarkStatusCount = React.createClass({
       type: 'GET',
       url: INSTAPAPER_COUNT_API,
       contentType: "application/json",
-      headers: bookmarksCfg.searchHeader,
-      timeout: bookmarksCfg.searchTimeout
+      headers: configObj.searchHeader,
+      timeout: configObj.searchTimeout
     }).done(function( data ) {
       var output = $.parseJSON(data);
       that.setState({
@@ -290,8 +298,8 @@ var BookmarkStatusUpdate = React.createClass({
       type: 'GET',
       url: INSTAPAPER_LATEST_API,
       contentType: "application/json",
-      headers: bookmarksCfg.searchHeader,
-      timeout: bookmarksCfg.searchTimeout
+      headers: configObj.searchHeader,
+      timeout: configObj.searchTimeout
     }).done(function( data ) {
       that.setState({
         time: data[0].time
@@ -333,7 +341,7 @@ var BookmarksSync = React.createClass({
       return {
           sharedQuery: '',
           shareType: 'default',
-          shareLimit: 10
+          shareLimit: configObj.shareLimit
       };
   },
   updateShared: function(){
@@ -346,8 +354,8 @@ var BookmarksSync = React.createClass({
       type: 'GET',
       url: INSTAPAPER_LIST_API,
       contentType: "application/json",
-      headers: bookmarksCfg.searchHeader,
-      timeout: bookmarksCfg.searchTimeout
+      headers: configObj.searchHeader,
+      timeout: configObj.searchTimeout
     }).done(function( data ) {
       that.setState({
         load: true,
@@ -372,8 +380,8 @@ var BookmarksSync = React.createClass({
           type: 'GET',
           url: api,
           contentType: "application/json",
-          headers: bookmarksCfg.searchHeader,
-          timeout: bookmarksCfg.searchTimeout
+          headers: configObj.searchHeader,
+          timeout: configObj.searchTimeout
         }).done(function( data ) {
           that.setState({
             load: true,
@@ -413,9 +421,7 @@ var BookmarksSync = React.createClass({
     return (
         <div>
           <div className="bookmarks-hint">{transObj.techHint}</div>
-
-          <a target="_blank" href="https://medium.com/@bryanyuan2/how-to-build-my-bookmark-service-a77a97ae31a1#.wkhyixki0" className="btn btn-default navbar-btn"><FaQuestion size="18" />How I build this service ?</a>
-
+          <a target="_blank" href={configObj.articleBuildService} className="btn btn-default navbar-btn"><FaQuestion size={configObj.fontAwesomeSize} />{transObj.articleBuildService}</a>
           <div className={bookmarksCls}>
             {bookmark}
           </div>
@@ -446,33 +452,30 @@ var DisplaySelect = React.createClass({
   },
   _handleClick: function(e) {
     if (e.currentTarget.id === 'display-default') {
-      this.setState({
-          type: 'default'
-      });
+      this.setState({ type: 'default' });
     } else if (e.currentTarget.id === 'display-simple') {
-      this.setState({
-          type: 'simple'
-      });
+      this.setState({ type: 'simple' });
     }
   },
   render: function() {
     return (
         <div className="display-group">
-          <button id="display-default" className="btn btn-default  display-group-btn" type="submit" onClick={this._handleClick.bind(this)}><FaPaperTh size="18" /> list</button>
-          <button id="display-simple" className="btn btn-default display-group-btn" type="submit" onClick={this._handleClick.bind(this)}><FaPaperList size="18" /> simple</button>
+          <button id="display-default" className="btn btn-default  display-group-btn" type="submit" onClick={this._handleClick.bind(this)}><FaPaperTh size={configObj.fontAwesomeSize} /> {transObj.list}</button>
+          <button id="display-simple" className="btn btn-default display-group-btn" type="submit" onClick={this._handleClick.bind(this)}><FaPaperList size={configObj.fontAwesomeSize} /> {transObj.simple}</button>
         </div>
       );
   }
 });
 
 var MoreLink = React.createClass({
-  moreLinkLimit: 10,
+  moreLinkLimit: configObj.shareLimit,
   mixins: [PureRenderMixin],
   propTypes: {
+    updateLimit: React.PropTypes.func
   },
   getInitialState: function() {
     return {
-        limit: 10
+        limit: configObj.shareLimit
     };
   },
   getDefaultProps: function() {
@@ -484,7 +487,7 @@ var MoreLink = React.createClass({
     this.props.updateLimit(limit);
   },
   _handleNextPage: function() {
-      this.moreLinkLimit = this.moreLinkLimit + 10;
+      this.moreLinkLimit = this.moreLinkLimit + configObj.increaseLimit;
       this.setState({
           limit: this.moreLinkLimit
       });
@@ -493,7 +496,7 @@ var MoreLink = React.createClass({
   render: function() {
     return (
         <div className="more-link-group">
-          <button id="more-link-btn" className="btn btn-default display-group-btn" type="submit" onClick={this._handleNextPage.bind(this)} ><FaChRight size="18" /> {transObj.moreBookmarksEtc}</button>
+          <button id="more-link-btn" className="btn btn-default display-group-btn" type="submit" onClick={this._handleNextPage.bind(this)} ><FaChRight size={configObj.fontAwesomeSize} /> {transObj.moreBookmarksEtc}</button>
         </div>
       );
   }
@@ -505,7 +508,7 @@ var BookmarksContainer = React.createClass({
     return {
       sharedQuery: '',
       shareType: 'default',
-      shareLimit: 10
+      shareLimit: configObj.shareLimit
     };
   },
   updateShared: function(sharedQuery){
@@ -569,8 +572,8 @@ var BookmarkChart = React.createClass({
       type: 'GET',
       url: INSTAPAPER_TIMESTAMP_API,
       contentType: "application/json",
-      headers: bookmarksCfg.searchHeader,
-      timeout: bookmarksCfg.searchTimeout
+      headers: configObj.searchHeader,
+      timeout: configObj.searchTimeout
     }).done(function( data ) {
       that.setState({
         load: true,
